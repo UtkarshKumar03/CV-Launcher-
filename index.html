@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Student Resume Builder</title>
+<style>
+  :root{--bg:#f6f8fb;--card:#fff;--accent:#0ea5a4;--muted:#6b7280;--text:#0f172a}
+  *{box-sizing:border-box}
+  body{font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial; margin:0; background:var(--bg); color:var(--text)}
+  .wrap{max-width:1000px;margin:28px auto;padding:18px;display:grid;grid-template-columns:1fr 420px;gap:18px}
+  header{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center}
+  h1{font-size:20px;margin:0}
+  p.lead{margin:0;color:var(--muted);font-size:13px}
+
+  /* Form */
+  form{background:var(--card);padding:14px;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+  label{display:block;font-size:13px;color:var(--muted);margin-top:10px}
+  input[type=text], input[type=email], textarea, select{width:100%;padding:8px;border-radius:8px;border:1px solid #e6e9ef;margin-top:6px;font-size:14px}
+  textarea{min-height:70px;resize:vertical}
+  .row{display:flex;gap:8px}
+  .small{flex:1}
+  .btn{display:inline-block;padding:8px 12px;border-radius:8px;border:none;cursor:pointer;background:var(--accent);color:#fff;font-weight:600;margin-top:12px}
+  .btn.ghost{background:#fff;color:var(--accent);border:1px solid rgba(14,165,164,0.12)}
+  .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+
+  /* skills & projects */
+  .tags{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+  .tag{background:#eef8f7;color:var(--accent);padding:6px 10px;border-radius:999px;font-size:13px;display:inline-flex;gap:8px;align-items:center}
+  .tag button{border:0;background:transparent;color:var(--accent);font-weight:700;cursor:pointer;padding:0}
+
+  .projects-list{margin-top:8px;display:flex;flex-direction:column;gap:8px}
+  .proj{background:#f8fafb;padding:8px;border-radius:8px;border:1px solid #eef2f7;display:flex;align-items:center;justify-content:space-between}
+
+  /* Preview */
+  .preview{background:var(--card);padding:18px;border-radius:10px;box-shadow:0 6px 18px rgba(15,23,42,0.06)}
+  .resume{width:100%;max-width:380px;margin:auto;background:#fff;padding:16px;border-radius:8px}
+  .r-header{text-align:center}
+  .r-name{font-size:18px;font-weight:800}
+  .r-role{color:var(--muted);font-size:13px;margin-top:6px}
+  .section{margin-top:12px}
+  .section h3{font-size:13px;margin:0 0 8px;color:var(--accent)}
+  .list{font-size:13px;color:#111;line-height:1.4}
+  .meta{font-size:12px;color:var(--muted)}
+
+  /* responsive */
+  @media(max-width:900px){
+    .wrap{grid-template-columns:1fr; padding:12px}
+    .preview{order:-1}
+  }
+
+  /* print styles (for PDF) */
+  @media print{
+    body{background:#fff}
+    .wrap{max-width:800px;margin:0;padding:0;grid-template-columns:1fr}
+    form, header, .controls{display:none}
+    .resume{box-shadow:none;border:none;margin:0}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div>
+        <h1>Resume Builder — Student Edition</h1>
+        <p class="lead">Fill details → Preview → Download PDF</p>
+      </div>
+      <div>
+        <button class="btn" id="downloadBtn">Download PDF</button>
+      </div>
+    </header>
+
+    <!-- FORM -->
+    <form id="form">
+      <label>Full Name
+        <input type="text" id="name" placeholder="Your name (e.g., A. B. Student)">
+      </label>
+
+      <div class="row">
+        <div class="small">
+          <label>Email
+            <input type="email" id="email" placeholder="you@example.com">
+          </label>
+        </div>
+        <div class="small">
+          <label>Phone
+            <input type="text" id="phone" placeholder="+91 9XXXXXXXXX">
+          </label>
+        </div>
+      </div>
+
+      <label>Summary / Objective
+        <textarea id="summary" placeholder="Short summary about you (1-2 lines)"></textarea>
+      </label>
+
+      <label>Skills
+        <div style="display:flex;gap:8px">
+          <input type="text" id="skillInput" placeholder="Type a skill and press Add">
+          <button type="button" class="btn ghost" id="addSkill">Add</button>
+        </div>
+        <div class="tags" id="skills"></div>
+      </label>
+
+      <label>Projects
+        <div style="display:flex;gap:8px">
+          <input type="text" id="projTitle" placeholder="Project title (e.g., Mini-Portfolio)">
+        </div>
+        <input type="text" id="projDesc" placeholder="Short description (1 line)">
+        <div class="controls">
+          <button type="button" class="btn ghost" id="addProj">Add Project</button>
+          <button type="button" class="btn" id="generate">Generate Preview</button>
+          <button type="button" class="btn ghost" id="reset">Reset</button>
+        </div>
+        <div class="projects-list" id="projects"></div>
+      </label>
+    </form>
+
+    <!-- PREVIEW -->
+    <aside class="preview">
+      <div class="resume" id="preview">
+        <div class="r-header">
+          <div class="r-name" id="p-name">Your Name</div>
+          <div class="r-role" id="p-role">Student • Your Course</div>
+          <div class="meta" id="p-contact">email • phone</div>
+        </div>
+
+        <div class="section">
+          <h3>Summary</h3>
+          <div class="list" id="p-summary">Short description shows here.</div>
+        </div>
+
+        <div class="section">
+          <h3>Skills</h3>
+          <div id="p-skills" class="list meta">—</div>
+        </div>
+
+        <div class="section">
+          <h3>Projects</h3>
+          <div id="p-projects" class="list"></div>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+<script>
+  // simple state
+  const skillsEl = document.getElementById('skills');
+  const projectsEl = document.getElementById('projects');
+  const skillInput = document.getElementById('skillInput');
+  const addSkillBtn = document.getElementById('addSkill');
+  const addProjBtn = document.getElementById('addProj');
+  const projTitle = document.getElementById('projTitle');
+  const projDesc = document.getElementById('projDesc');
+  const generateBtn = document.getElementById('generate');
+  const resetBtn = document.getElementById('reset');
+  const downloadBtn = document.getElementById('downloadBtn');
+
+  let skills = [];
+  let projects = [];
+
+  function renderSkills(){
+    skillsEl.innerHTML = '';
+    skills.forEach((s, i)=>{
+      const tag = document.createElement('span');
+      tag.className = 'tag';
+      tag.innerHTML = `${s} <button aria-label="remove" data-i="${i}">&times;</button>`;
+      skillsEl.appendChild(tag);
+    });
+  }
+  skillsEl.addEventListener('click', e=>{
+    if(e.target.tagName === 'BUTTON'){
+      const i = +e.target.dataset.i;
+      skills.splice(i,1);
+      renderSkills();
+    }
+  });
+
+  addSkillBtn.addEventListener('click', ()=>{
+    const v = skillInput.value.trim();
+    if(!v) return;
+    skills.push(v);
+    skillInput.value = '';
+    renderSkills();
+  });
+  skillInput.addEventListener('keyup', e=>{ if(e.key==='Enter') addSkillBtn.click(); });
+
+  // projects
+  function renderProjects(){
+    projectsEl.innerHTML = '';
+    projects.forEach((p,i)=>{
+      const div = document.createElement('div');
+      div.className = 'proj';
+      div.innerHTML = `<div><strong>${p.title}</strong><div class="meta" style="font-size:12px">${p.desc}</div></div>
+                       <div><button data-i="${i}" style="background:transparent;border:0;color:#ef4444;cursor:pointer">Remove</button></div>`;
+      projectsEl.appendChild(div);
+    });
+  }
+  projectsEl.addEventListener('click', e=>{
+    if(e.target.tagName === 'BUTTON'){
+      const i = +e.target.dataset.i;
+      projects.splice(i,1); renderProjects();
+    }
+  });
+
+  addProjBtn.addEventListener('click', ()=>{
+    const t = projTitle.value.trim(); const d = projDesc.value.trim();
+    if(!t) return alert('Add project title');
+    projects.push({title:t, desc:d});
+    projTitle.value = ''; projDesc.value = '';
+    renderProjects();
+  });
+
+  // generate preview
+  function generate(){
+    const name = document.getElementById('name').value.trim() || 'Your Name';
+    const email = document.getElementById('email').value.trim() || '';
+    const phone = document.getElementById('phone').value.trim() || '';
+    const summary = document.getElementById('summary').value.trim() || 'Brief summary about yourself.';
+
+    document.getElementById('p-name').textContent = name;
+    document.getElementById('p-role').textContent = 'Student';
+    document.getElementById('p-contact').textContent = [email, phone].filter(Boolean).join(' • ') || '—';
+    document.getElementById('p-summary').textContent = summary;
+    document.getElementById('p-skills').textContent = skills.length ? skills.join(' • ') : '—';
+
+    const pprojects = document.getElementById('p-projects');
+    pprojects.innerHTML = '';
+    if(projects.length===0){
+      pprojects.innerHTML = '<div class="meta">No projects yet.</div>';
+    } else {
+      projects.forEach(p=>{
+        const el = document.createElement('div');
+        el.style.marginBottom = '8px';
+        el.innerHTML = `<strong>${p.title}</strong><div class="meta">${p.desc}</div>`;
+        pprojects.appendChild(el);
+      });
+    }
+  }
+  generateBtn.addEventListener('click', generate);
+
+  // reset
+  resetBtn.addEventListener('click', ()=>{
+    if(!confirm('Clear all fields?')) return;
+    document.getElementById('form').reset();
+    skills = []; projects = []; renderSkills(); renderProjects();
+    document.getElementById('p-name').textContent = 'Your Name';
+    document.getElementById('p-role').textContent = 'Student';
+    document.getElementById('p-contact').textContent = 'email • phone';
+    document.getElementById('p-summary').textContent = 'Short description shows here.';
+    document.getElementById('p-skills').textContent = '—';
+    document.getElementById('p-projects').innerHTML = '';
+  });
+
+  // download -> open print dialog (user can choose Save as PDF)
+  downloadBtn.addEventListener('click', ()=>{
+    // ensure preview is up-to-date
+    generate();
+    // small delay so DOM updates before print
+    setTimeout(()=>window.print(), 200);
+  });
+
+  // initial render
+  renderSkills(); renderProjects();
+</script>
+</body>
+</html>
